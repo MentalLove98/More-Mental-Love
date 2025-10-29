@@ -1,0 +1,22 @@
+import Navbar from '../components/Navbar'
+import Card from '../components/Card'
+
+export default function Landing() {
+  return (
+    <div className="bg-skyblue min-h-screen font-body">
+      <Navbar />
+      <main className="text-center py-20">
+        <h1 className="text-5xl font-heading mb-4">More Mental Love</h1>
+        <p className="mb-8 text-xl">Empower Your Mind. Track Your Mood. Spread Love.</p>
+        <button className="bg-lavender text-white px-8 py-3 rounded-lg shadow hover:bg-purple-400">
+          Get Started
+        </button>
+        <div className="mt-16 grid md:grid-cols-3 gap-6">
+          <Card title="Daily Mood Tracker" description="Log how you feel and see trends over time." />
+          <Card title="Self-Assessment Quizzes" description="Understand your emotional patterns with 2-min quizzes." />
+          <Card title="Resources & Tips" description="Access guided meditations, articles, and coping tools." />
+        </div>
+      </main>
+    </div>
+  )
+}
