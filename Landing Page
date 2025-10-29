@@ -1,0 +1,250 @@
+#!/bin/bash
+
+# Variables
+REPO_URL="https://github.com/<YOUR_USERNAME>/more-mental-love.git"
+PROJECT_DIR="more-mental-love"
+
+# Create project folder
+mkdir $PROJECT_DIR && cd $PROJECT_DIR
+
+# Initialize Git
+git init
+
+# Create folder structure
+mkdir -p apps/web/{app,components,styles} apps/server/src/{routes,prisma} packages/{ui,utils,types}
+
+# Workspace package.json
+cat <<EOL > package.json
+{
+  "name": "more-mental-love",
+  "private": true,
+  "workspaces": ["apps/*", "packages/*"]
+}
+EOL
+
+# apps/web/package.json
+cat <<EOL > apps/web/package.json
+{
+  "name": "web",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "13.5.0",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "tailwindcss": "^3.3.0",
+    "axios": "^1.6.0"
+  }
+}
+EOL
+
+# Tailwind config
+cat <<EOL > apps/web/tailwind.config.js
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: ["./app/**/*.{js,ts,jsx,tsx}", "./components/**/*.{js,ts,jsx,tsx}"],
+  theme: {
+    extend: {
+      colors: {
+        primary: '#A7C7E7',
+        secondary: '#C8A2C8',
+        accent: '#BBDDF2',
+        background: '#F9FAFB',
+        text: '#36454F'
+      }
+    },
+  },
+  plugins: [],
+}
+EOL
+
+# Global CSS
+cat <<EOL > apps/web/styles/globals.css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-background text-text font-sans;
+}
+EOL
+
+# Example Landing Page (app/page.tsx)
+cat <<EOL > apps/web/app/page.tsx
+import React from 'react';
+
+export default function LandingPage() {
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center">
+      <h1 className="text-5xl font-bold mb-4 text-primary">More Mental Love</h1>
+      <p className="text-lg mb-6 text-text">
+        Empower Your Mind. Track Your Mood. Spread Love.
+      </p>
+      <button className="bg-primary text-white px-6 py-3 rounded-md hover:bg-accent transition">
+        Get Started
+      </button>
+    </div>
+  );
+}
+EOL
+
+# Example Dashboard with Mood Tracker (app/dashboard/page.tsx)
+mkdir -p apps/web/app/dashboard
+cat <<EOL > apps/web/app/dashboard/page.tsx
+'use client';
+import React, { useState } from 'react';
+
+export default function Dashboard() {
+  const [mood, setMood] = useState('');
+  const [note, setNote] = useState('');
+
+  const submitMood = () => {
+    alert(\`Mood submitted: \${mood}, Note: \${note}\`);
+    setMood('');
+    setNote('');
+  }
+
+  return (
+    <div className="min-h-screen p-6">
+      <h2 className="text-3xl font-semibold mb-4 text-primary">Dashboard</h2>
+      <div className="bg-white rounded-lg p-6 shadow-md max-w-md mx-auto">
+        <h3 className="text-xl mb-2">How are you feeling today?</h3>
+        <select
+          value={mood}
+          onChange={(e) => setMood(e.target.value)}
+          className="border border-gray-300 rounded-md p-2 w-full mb-2"
+        >
+          <option value="">Select Mood</option>
+          <option value="happy">😄 Happy</option>
+          <option value="neutral">😐 Neutral</option>
+          <option value="sad">🙁 Sad</option>
+        </select>
+        <textarea
+          placeholder="Add a note (optional)"
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          className="border border-gray-300 rounded-md p-2 w-full mb-2"
+        />
+        <button
+          onClick={submitMood}
+          className="bg-primary text-white px-4 py-2 rounded-md hover:bg-accent transition w-full"
+        >
+          Submit
+        </button>
+      </div>
+    </div>
+  );
+}
+EOL
+
+# apps/server/package.json
+mkdir -p apps/server
+cat <<EOL > apps/server/package.json
+{
+  "name": "server",
+  "private": true,
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "ts-node-dev src/index.ts"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "prisma": "^5.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.0"
+  },
+  "devDependencies": {
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.1.0"
+  }
+}
+EOL
+
+# Prisma schema
+cat <<EOL > apps/server/src/prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String      @id @default(cuid())
+  email       String      @unique
+  password    String
+  moodEntries MoodEntry[]
+}
+
+model MoodEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime @default(now())
+  mood      String
+  note      String?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+}
+EOL
+
+# Server entry point
+cat <<EOL > apps/server/src/index.ts
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { PrismaClient } from '@prisma/client';
+
+dotenv.config();
+const prisma = new PrismaClient();
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+app.get('/', (req, res) => res.send('More Mental Love API'));
+
+app.post('/mood', async (req, res) => {
+  const { userId, mood, note } = req.body;
+  try {
+    const entry = await prisma.moodEntry.create({ data: { userId, mood, note } });
+    res.json(entry);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to save mood' });
+  }
+});
+
+app.listen(4000, () => console.log('Server running on http://localhost:4000'));
+EOL
+
+# Git ignore
+cat <<EOL > .gitignore
+node_modules
+.env
+.DS_Store
+EOL
+
+# README
+cat <<EOL > README.md
+# More Mental Love
+
+SaaS for mental health awareness with mood tracking.
+
+- Frontend: Next.js + TailwindCSS
+- Backend: Express + Prisma + PostgreSQL
+- Features: Mood Tracker, Dashboard, Landing Page
+EOL
+
+# Initialize Git, commit, push
+git add .
+git commit -m "MVP scaffold with Tailwind, Landing, Dashboard, Mood Tracker"
+git branch -M main
+git remote add origin $REPO_URL
+git push -u origin main
+
+echo "✅ MVP scaffold pushed to GitHub. Download ZIP from your repo page!"
