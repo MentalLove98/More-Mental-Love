@@ -1,0 +1,31 @@
+more-mental-love/
+│
+├─ apps/
+│    ├─ web/                # Next.js frontend
+│    │    ├─ pages/
+│    │    │    ├─ index.tsx         # Landing Page
+│    │    │    ├─ dashboard.tsx     # Dashboard
+│    │    │    ├─ quiz.tsx          # Quiz Page
+│    │    │    └─ admin.tsx         # Admin Panel
+│    │    ├─ components/            # Reusable UI components
+│    │    │    ├─ Navbar.tsx
+│    │    │    ├─ Card.tsx
+│    │    │    ├─ MoodTracker.tsx
+│    │    │    ├─ QuizStepper.tsx
+│    │    │    └─ Table.tsx
+│    │    ├─ styles/
+│    │    │    └─ globals.css        # Tailwind base + custom pastel theme
+│    │    └─ public/                 # Images, logos, mockups
+│    │         └─ mockups/           # The PNGs from earlier
+│    │
+│    └─ server/               # Optional: simple Node/Express or Next API routes
+│         └─ index.ts
+│
+├─ packages/
+│    ├─ ui/                  # Shared UI components
+│    ├─ utils/               # Helper functions (mood analytics, API helpers)
+│    └─ types/               # TypeScript types
+│
+├─ tailwind.config.js
+├─ package.json
+└─ README.md
